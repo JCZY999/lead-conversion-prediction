@@ -106,7 +106,7 @@ if selected_page!="Nursing Program Scoring":
 
 st.markdown("""<div class='hero'><div class='eyebrow'>NURSING EDUCATION RECRUITMENT</div><h1>Nursing Program Scoring</h1><p>Score prospective students using program fit, academic readiness, credentials, timing, intent, and healthcare experience.</p></div>""",unsafe_allow_html=True)
 
-tabs=st.tabs(["Score an Applicant","Applicant Analytics","Dataset Overview"])
+tabs=st.tabs(["Score an Applicant","Applicant Analytics"])
 
 with tabs[0]:
     st.markdown("### Nursing Program Interest and Readiness")
@@ -139,41 +139,65 @@ with tabs[0]:
     st.plotly_chart(fig,use_container_width=True)
 
 with tabs[1]:
-    st.markdown("### Applicant Pool Analytics")
-    view=df.copy()
-    view["Tier"]=pd.cut(view["Predicted Score"],[-.01,.50,.75,1],labels=["Nurture","Qualified","High Priority"])
-    predicted=(view["Predicted Score"]>=.5).astype(int)
-    m1,m2,m3,m4=st.columns(4)
-    m1.metric("Total Applicants",f"{len(view):,}")
-    m2.metric("Actual Enrollment Rate",f"{view['Enrolled'].mean():.1%}")
-    m3.metric("High Priority %",f"{(view['Tier']=='High Priority').mean():.1%}")
-    m4.metric("Model Accuracy",f"{(predicted==view['Enrolled']).mean():.1%}")
-    stats=view.groupby("Program",as_index=False).agg(Applicants=("Lead ID","count"),Avg_Score=("Predicted Score","mean"),Enrollment_Rate=("Enrolled","mean"),Pipeline_Value=("Predicted Score",lambda x:x.sum()*45000))
-    fig=px.scatter(stats,x="Applicants",y="Avg_Score",size="Pipeline_Value",color="Program",template="plotly_dark",title="Program interest: lead quality vs volume")
-    fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f")
-    st.plotly_chart(fig,use_container_width=True)
-    st.markdown("#### Top Applicants by Enrollment Likelihood")
-    columns=["Lead ID","Program","Education","RN License","Credential","Start Time","Interest","Predicted Score","Enrolled"]
-    top=view.nlargest(15,"Predicted Score")[columns].copy()
-    top["Predicted Score"]=top["Predicted Score"].map(lambda value:f"{value:.1%}")
-    top["Enrolled"]=top["Enrolled"].map(lambda value:"✓ Enrolled" if value else "Pending")
-    st.dataframe(top,use_container_width=True,hide_index=True)
+    st.markdown("### Live Applicant Analytics")
+    st.caption("These scores update from the attributes selected in Score an Applicant.")
 
-with tabs[2]:
-    st.markdown("### Dataset Overview")
-    st.markdown(f"**Total Applicants:** {len(df):,} | **Enrolled:** {df['Enrolled'].sum():,} | **Enrollment Rate:** {df['Enrolled'].mean():.1%}")
-    c1,c2=st.columns(2)
-    with c1:
-        fig=px.pie(df,names="Program",template="plotly_dark",title="Program Interest")
-        fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f")
+    academic=np.mean([drivers["Education"],drivers["GPA"],drivers["Prerequisites"]])
+    credential_readiness=np.mean([drivers["RN license"],drivers["Credential"],drivers["Program fit"]])
+    intent_readiness=np.mean([drivers["Start readiness"],drivers["Interest"]])
+    experience_fit=np.mean([drivers["Healthcare experience"],drivers["Study format"]])
+    peer_group=df[df["Program"]==program]
+    peer_average=peer_group["Predicted Score"].mean()
+    percentile=(peer_group["Predicted Score"]<=score).mean()
+
+    m1,m2,m3,m4=st.columns(4)
+    m1.metric("Overall likelihood",f"{score:.1%}",f"{score-peer_average:+.1%} vs program average")
+    m2.metric("Academic readiness",f"{academic:.1%}")
+    m3.metric("Credential & program fit",f"{credential_readiness:.1%}")
+    m4.metric("Intent readiness",f"{intent_readiness:.1%}")
+
+    m5,m6,m7=st.columns(3)
+    m5.metric("Experience & format fit",f"{experience_fit:.1%}")
+    m6.metric(f"{program} average",f"{peer_average:.1%}")
+    m7.metric("Program peer percentile",f"{percentile:.0%}")
+
+    weights={"Program fit":5,"Education":5,"RN license":5,"Credential":5,"GPA":4,"Prerequisites":4,"Start readiness":5,"Interest":5,"Healthcare experience":3,"Study format":3}
+    factor_table=pd.DataFrame({
+        "Factor":list(drivers.keys()),
+        "Importance":[weights[name] for name in drivers],
+        "Applicant score":list(drivers.values()),
+        "Weighted contribution":[drivers[name]*weights[name] for name in drivers],
+    })
+    factor_table["Share of model"]=factor_table["Weighted contribution"]/sum(weights.values())
+
+    left,right=st.columns([1.35,1])
+    with left:
+        fig=px.bar(
+            factor_table.sort_values("Weighted contribution"),
+            x="Weighted contribution",y="Factor",orientation="h",
+            color="Importance",color_continuous_scale=["#285848","#64f59e"],
+            template="plotly_dark",title="Weighted applicant score contributions",
+        )
+        fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f",coloraxis_showscale=False)
         st.plotly_chart(fig,use_container_width=True)
-        fig=px.bar(df.groupby("Education",as_index=False).size().sort_values("size"),x="size",y="Education",orientation="h",template="plotly_dark",color_discrete_sequence=["#64f59e"],title="Education Completed")
-        fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f",showlegend=False)
-        st.plotly_chart(fig,use_container_width=True)
-    with c2:
-        fig=px.bar(df.groupby("Start Time",as_index=False).size().sort_values("size"),x="size",y="Start Time",orientation="h",template="plotly_dark",color_discrete_sequence=["#64f59e"],title="Intended Start Time")
-        fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f",showlegend=False)
-        st.plotly_chart(fig,use_container_width=True)
-        fig=px.histogram(df,x="Predicted Score",nbins=30,template="plotly_dark",color_discrete_sequence=["#64f59e"],title="Score Distribution")
-        fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f",showlegend=False)
-        st.plotly_chart(fig,use_container_width=True)
+    with right:
+        st.markdown("#### Selected applicant profile")
+        st.markdown(
+            f"**Program:** {program}  \\n"
+            f"**Education:** {education}  \\n"
+            f"**RN license:** {rn_license}  \\n"
+            f"**Credential:** {credential}  \\n"
+            f"**GPA:** {gpa}  \\n"
+            f"**Prerequisites:** {prerequisites}  \\n"
+            f"**Start time:** {start_time}  \\n"
+            f"**Interest:** {interest}  \\n"
+            f"**Healthcare experience:** {experience}  \\n"
+            f"**Study format:** {study_format}"
+        )
+
+    display=factor_table[["Factor","Importance","Applicant score","Share of model"]].copy()
+    display["Importance"]=display["Importance"].map(lambda value:"★"*value)
+    st.dataframe(
+        display.style.format({"Applicant score":"{:.1%}","Share of model":"{:.1%}"}),
+        use_container_width=True,hide_index=True,
+    )
