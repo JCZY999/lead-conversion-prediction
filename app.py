@@ -12,6 +12,8 @@ st.markdown("""<style>
 .hero h1{font-size:3rem;margin:.5rem 0}
 .hero p{color:#a8d5c4;font-size:1.125rem}
 .note{background:#0f2f26;border-left:3px solid #64f59e;padding:1rem;border-radius:.5rem;margin:1.5rem 0}
+.sidebar-meta{text-align:left;line-height:1.45}
+.sidebar-meta p{margin:0 0 .85rem}
 </style>""", unsafe_allow_html=True)
 
 def probability(source, pages, minutes, opens, form, prior):
@@ -27,7 +29,15 @@ def leads():
     p=np.array([probability(s,a,b,c,d,e) for s,a,b,c,d,e in zip(source,pages,mins,opens,form,prior)])
     converted=rng.binomial(1,p); return pd.DataFrame({"Lead ID":[f"LD-{1000+i}" for i in range(n)],"Source":source,"Pages Viewed":pages,"Time on Site (min)":mins,"Email Opens":opens,"Form Started":form,"Prior Lead Probability":prior,"Predicted Probability":p,"Converted":converted,"Expected Pipeline USD":p*8500})
 
-df=leads(); st.sidebar.markdown("## ◎ Lead Intelligence"); page=st.sidebar.radio("Navigate",["Score a Lead","Lead Intelligence","Model Evaluation","Methodology & Data","Nursing Program Scoring"]); st.sidebar.divider(); st.sidebar.markdown("**Data**: 950 simulated leads\n**Model**: Logistic Regression\n**Training**: Behavioral signals")
+df=leads()
+st.sidebar.markdown("## ◎ Lead Intelligence")
+page=st.sidebar.radio("Navigate",["Score a Lead","Lead Intelligence","Model Evaluation","Methodology & Data","Nursing Program Scoring"])
+st.sidebar.divider()
+st.sidebar.markdown("""<div class="sidebar-meta">
+<p><strong>Data Input:</strong><br>950 example simulated data or upload your own data</p>
+<p><strong>Model:</strong><br>Logistic Regression</p>
+<p><strong>Training:</strong><br>Behavioral signals</p>
+</div>""",unsafe_allow_html=True)
 
 if page=="Score a Lead":
     st.markdown("""<div class='hero'><div class='eyebrow'>LEAD CONVERSION PREDICTION</div><h1>Score a Lead</h1><p>Simulate a lead's likelihood to convert and turn behavioral signals into an actionable sales recommendation.</p></div>""", unsafe_allow_html=True)
