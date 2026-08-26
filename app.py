@@ -42,13 +42,79 @@ if page=="Score a Lead":
     fig=px.bar(drivers.sort_values("Contribution"),x="Contribution",y="Feature",orientation="h",template="plotly_dark",color_discrete_sequence=["#64f59e"],title="Local feature drivers")
     fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f");st.plotly_chart(fig,use_container_width=True)
 elif page=="Lead Intelligence":
-    st.markdown("""<div class='hero'><div class='eyebrow'>SALES &amp; MARKETING VIEW</div><h1>Lead Intelligence</h1><p>Explore where high-intent leads come from and how a ranking model helps concentrate sales effort.</p></div>""", unsafe_allow_html=True)
-    view=df.copy(); view["Priority"]=pd.cut(view["Predicted Probability"],[-.01,.35,.65,1],labels=["Low","Nurture","High"])
-    x,y,z=st.columns(3);x.metric("Leads scored",f"{len(view):,}");y.metric("Actual conversion rate",f"{view.Converted.mean():.1%}");z.metric("Top-20% capture",f"{view.nlargest(int(len(view)*.2),'Predicted Probability').Converted.mean():.1%}")
+    heading, upload_area=st.columns([3,1],vertical_alignment="center")
+    with heading:
+        st.markdown("""<div class='hero'><div class='eyebrow'>SALES &amp; MARKETING VIEW</div><h1>Lead Intelligence</h1><p>Explore where high-intent leads come from and how a ranking model helps concentrate sales effort.</p></div>""", unsafe_allow_html=True)
+    with upload_area:
+        uploaded=st.file_uploader("Upload lead data",type=["csv","xlsx"],help="Upload a CSV or Excel workbook to recalculate this page.")
+        st.caption("Required: Source, Converted, and Predicted Probability. Expected Pipeline USD is optional.")
+
+    view=df.copy()
+    if uploaded is not None:
+        try:
+            incoming=pd.read_csv(uploaded) if uploaded.name.lower().endswith(".csv") else pd.read_excel(uploaded)
+            aliases={
+                "Source":["source","acquisition source","channel"],
+                "Converted":["converted","conversion","actual converted","won"],
+                "Predicted Probability":["predicted probability","prediction","probability","conversion probability","score"],
+                "Expected Pipeline USD":["expected pipeline usd","expected pipeline","pipeline","pipeline usd"],
+                "Lead ID":["lead id","leadid","id"],
+                "Prior Lead Probability":["prior lead probability","prior probability"],
+            }
+            normalized={str(col).strip().lower().replace("_"," "):col for col in incoming.columns}
+            rename={}
+            for canonical,names in aliases.items():
+                for name in names:
+                    if name in normalized:
+                        rename[normalized[name]]=canonical
+                        break
+            incoming=incoming.rename(columns=rename)
+            required=["Source","Converted","Predicted Probability"]
+            missing=[col for col in required if col not in incoming.columns]
+            if missing:
+                raise ValueError("Missing required column(s): "+", ".join(missing))
+            if incoming.empty:
+                raise ValueError("The uploaded file contains no lead rows.")
+            incoming["Source"]=incoming["Source"].astype(str).str.strip()
+            converted_text=incoming["Converted"].astype(str).str.strip().str.lower()
+            converted_map={"true":1,"yes":1,"y":1,"converted":1,"won":1,"false":0,"no":0,"n":0,"not converted":0,"lost":0}
+            converted_numeric=pd.to_numeric(incoming["Converted"],errors="coerce")
+            incoming["Converted"]=converted_numeric.fillna(converted_text.map(converted_map))
+            incoming["Predicted Probability"]=pd.to_numeric(incoming["Predicted Probability"],errors="coerce")
+            if incoming["Predicted Probability"].dropna().gt(1).any():
+                incoming["Predicted Probability"]=incoming["Predicted Probability"]/100
+            if incoming["Converted"].isna().any() or incoming["Predicted Probability"].isna().any():
+                raise ValueError("Converted and Predicted Probability must contain valid numbers (or yes/no values).")
+            if not incoming["Converted"].isin([0,1]).all():
+                raise ValueError("Converted values must be 1/0, true/false, or yes/no.")
+            if not incoming["Predicted Probability"].between(0,1).all():
+                raise ValueError("Predicted Probability must be between 0 and 1, or formatted as 0–100 percentages.")
+            if "Lead ID" not in incoming.columns:
+                incoming["Lead ID"]=[f"UP-{i+1:04d}" for i in range(len(incoming))]
+            if "Expected Pipeline USD" in incoming.columns:
+                incoming["Expected Pipeline USD"]=pd.to_numeric(incoming["Expected Pipeline USD"],errors="coerce")
+                incoming["Expected Pipeline USD"]=incoming["Expected Pipeline USD"].fillna(incoming["Predicted Probability"]*8500)
+            else:
+                incoming["Expected Pipeline USD"]=incoming["Predicted Probability"]*8500
+            view=incoming
+            st.success(f"Using {len(view):,} leads from {uploaded.name}.")
+        except Exception as exc:
+            st.error(f"Could not use this file: {exc}")
+            st.info("Showing the built-in simulated dataset instead.")
+
+    view["Priority"]=pd.cut(view["Predicted Probability"],[-.01,.35,.65,1],labels=["Low","Nurture","High"])
+    top_count=max(1,int(np.ceil(len(view)*.2)))
+    x,y,z=st.columns(3)
+    x.metric("Leads scored",f"{len(view):,}")
+    y.metric("Actual conversion rate",f"{view['Converted'].mean():.1%}")
+    z.metric("Top-20% capture",f"{view.nlargest(top_count,'Predicted Probability')['Converted'].mean():.1%}")
     chart=view.groupby("Source",as_index=False).agg(Leads=("Lead ID","count"),Avg_probability=("Predicted Probability","mean"),Pipeline=("Expected Pipeline USD","sum"))
     fig=px.scatter(chart,x="Leads",y="Avg_probability",size="Pipeline",color="Source",template="plotly_dark",title="Channel quality and expected pipeline")
     fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f");st.plotly_chart(fig,use_container_width=True)
-    st.dataframe(view.sort_values("Predicted Probability",ascending=False).head(25).style.format({"Predicted Probability":"{:.1%}","Prior Lead Probability":"{:.0%}","Expected Pipeline USD":"${:,.0f}"}),use_container_width=True)
+    formats={"Predicted Probability":"{:.1%}","Expected Pipeline USD":"${:,.0f}"}
+    if "Prior Lead Probability" in view.columns:
+        formats["Prior Lead Probability"]="{:.0%}"
+    st.dataframe(view.sort_values("Predicted Probability",ascending=False).head(25).style.format(formats),use_container_width=True)
 elif page=="Nursing Program Scoring":
     st.switch_page("pages/nursing_program_scoring.py")
 else:
