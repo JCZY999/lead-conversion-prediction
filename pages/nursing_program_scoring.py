@@ -183,15 +183,15 @@ with tabs[1]:
     with right:
         st.markdown("#### Selected applicant profile")
         st.markdown(
-            f"**Program:** {program}  \\n"
-            f"**Education:** {education}  \\n"
-            f"**RN license:** {rn_license}  \\n"
-            f"**Credential:** {credential}  \\n"
-            f"**GPA:** {gpa}  \\n"
-            f"**Prerequisites:** {prerequisites}  \\n"
-            f"**Start time:** {start_time}  \\n"
-            f"**Interest:** {interest}  \\n"
-            f"**Healthcare experience:** {experience}  \\n"
+            f"**Program:** {program}  \n"
+            f"**Education:** {education}  \n"
+            f"**RN license:** {rn_license}  \n"
+            f"**Credential:** {credential}  \n"
+            f"**GPA:** {gpa}  \n"
+            f"**Prerequisites:** {prerequisites}  \n"
+            f"**Start time:** {start_time}  \n"
+            f"**Interest:** {interest}  \n"
+            f"**Healthcare experience:** {experience}  \n"
             f"**Study format:** {study_format}"
         )
 
