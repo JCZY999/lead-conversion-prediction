@@ -96,6 +96,7 @@ st.sidebar.markdown("""<div class="sidebar-meta">
 <p><strong>Data Input:</strong><br>950 simulated data as example or upload your own data</p>
 <p><strong>Model:</strong><br>Logistic Regression</p>
 <p><strong>Training:</strong><br>Behavioral signals</p>
+<p><strong>Created by:</strong><br>Jacob Chen</p>
 </div>""",unsafe_allow_html=True)
 if selected_page!="Nursing Program Scoring":
     st.switch_page("app.py")
