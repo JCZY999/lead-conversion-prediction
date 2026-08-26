@@ -86,7 +86,7 @@ def generate_nursing_leads():
 
 df = generate_nursing_leads()
 
-nav_options=["Score a Lead","Lead Intelligence","Model Evaluation","Methodology & Data","Nursing Program Scoring"]
+nav_options=["Lead Intelligence","Score a Lead","Model Evaluation","Methodology & Data","Nursing Program Scoring"]
 if "main_nav" not in st.session_state:
     st.session_state.main_nav="Nursing Program Scoring"
 st.sidebar.markdown("## ◎ Lead Intelligence")
