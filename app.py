@@ -31,7 +31,7 @@ def leads():
 
 df=leads()
 st.sidebar.markdown("## ◎ Lead Intelligence")
-page=st.sidebar.radio("Navigate",["Lead Intelligence","Score a Lead","Model Evaluation","Methodology & Data","Nursing Program Scoring"],key="main_nav")
+page=st.sidebar.radio("Navigate",["Lead Intelligence","Score a Lead","Nursing Program Scoring","Model Evaluation","Methodology & Data"],key="main_nav")
 st.sidebar.divider()
 st.sidebar.markdown("""<div class="sidebar-meta">
 <p><strong>Data Input:</strong><br>950 simulated data as example or upload your own data</p>
