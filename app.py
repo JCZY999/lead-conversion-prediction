@@ -12,7 +12,7 @@ st.markdown("""<style>
 .hero h1{font-size:3rem;margin:.5rem 0}
 .hero p{color:#a8d5c4;font-size:1.125rem}
 .note{background:#0f2f26;border-left:3px solid #64f59e;padding:1rem;border-radius:.5rem;margin:1.5rem 0}
-</style>""")
+</style>""", unsafe_allow_html=True)
 
 def probability(source, pages, minutes, opens, form, prior):
     source_score={"Paid Search":.85,"Paid Social":.35,"SEO / Organic":.60,"Email / CRM":.75,"Display":.15,"Referral":.50}[source]
@@ -30,7 +30,7 @@ def leads():
 df=leads(); st.sidebar.markdown("## ◎ Lead Intelligence"); page=st.sidebar.radio("Navigate",["Score a Lead","Lead Intelligence","Model Evaluation","Methodology & Data","Nursing Program Scoring"]); st.sidebar.divider(); st.sidebar.markdown("**Data**: 950 simulated leads\n**Model**: Logistic Regression\n**Training**: Behavioral signals")
 
 if page=="Score a Lead":
-    st.markdown("""<div class='hero'><div class='eyebrow'>LEAD CONVERSION PREDICTION</div><h1>Score a Lead</h1><p>Simulate a lead's likelihood to convert and turn behavioral signals into an actionable sales recommendation.</p></div>""")
+    st.markdown("""<div class='hero'><div class='eyebrow'>LEAD CONVERSION PREDICTION</div><h1>Score a Lead</h1><p>Simulate a lead's likelihood to convert and turn behavioral signals into an actionable sales recommendation.</p></div>""", unsafe_allow_html=True)
     a,b,c=st.columns(3)
     with a: source=st.selectbox("Acquisition source",["Paid Search","Paid Social","SEO / Organic","Email / CRM","Display","Referral"]); pages=st.slider("Pages viewed",1,15,5)
     with b: mins=st.slider("Time on site (minutes)",0.0,15.0,3.5,.5); opens=st.slider("Email opens",0,10,2)
@@ -42,7 +42,7 @@ if page=="Score a Lead":
     fig=px.bar(drivers.sort_values("Contribution"),x="Contribution",y="Feature",orientation="h",template="plotly_dark",color_discrete_sequence=["#64f59e"],title="Local feature drivers")
     fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f");st.plotly_chart(fig,use_container_width=True)
 elif page=="Lead Intelligence":
-    st.markdown("""<div class='hero'><div class='eyebrow'>SALES &amp; MARKETING VIEW</div><h1>Lead Intelligence</h1><p>Explore where high-intent leads come from and how a ranking model helps concentrate sales effort.</p></div>""")
+    st.markdown("""<div class='hero'><div class='eyebrow'>SALES &amp; MARKETING VIEW</div><h1>Lead Intelligence</h1><p>Explore where high-intent leads come from and how a ranking model helps concentrate sales effort.</p></div>""", unsafe_allow_html=True)
     view=df.copy(); view["Priority"]=pd.cut(view["Predicted Probability"],[-.01,.35,.65,1],labels=["Low","Nurture","High"])
     x,y,z=st.columns(3);x.metric("Leads scored",f"{len(view):,}");y.metric("Actual conversion rate",f"{view.Converted.mean():.1%}");z.metric("Top-20% capture",f"{view.nlargest(int(len(view)*.2),'Predicted Probability').Converted.mean():.1%}")
     chart=view.groupby("Source",as_index=False).agg(Leads=("Lead ID","count"),Avg_probability=("Predicted Probability","mean"),Pipeline=("Expected Pipeline USD","sum"))
@@ -52,7 +52,7 @@ elif page=="Lead Intelligence":
 elif page=="Nursing Program Scoring":
     st.switch_page("pages/nursing_program_scoring.py")
 else:
-    st.markdown("""<div class='hero'><div class='eyebrow'>MODEL TRANSPARENCY</div><h1>"""+("Model Evaluation" if page=="Model Evaluation" else "Methodology & Data")+"</h1><p>"+("Compare model quality across different training algorithms." if page=="Model Evaluation" else "Understand the data sources and methodology behind this prediction model.")+"</p></div>""")
+    st.markdown("""<div class='hero'><div class='eyebrow'>MODEL TRANSPARENCY</div><h1>"""+("Model Evaluation" if page=="Model Evaluation" else "Methodology & Data")+"</h1><p>"+("Compare model quality across different training algorithms." if page=="Model Evaluation" else "Understand the data sources and methodology behind this prediction model.")+"</p></div>""", unsafe_allow_html=True)
     if page=="Model Evaluation":
         ev=pd.DataFrame({"Model":["Logistic Regression","XGBoost / LightGBM","Naïve baseline"],"ROC-AUC":["0.79","0.86","0.50"],"PR-AUC":["0.46","0.58","0.29"],"F1":["0.61","0.67","0.00"],"Use in production":["✓ Current","⚠ Experimental","✗"]})
         st.dataframe(ev,use_container_width=True,hide_index=True)
