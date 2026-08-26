@@ -12,6 +12,8 @@ st.markdown("""<style>
 .hero h1{font-size:3rem;margin:.5rem 0}
 .hero p{color:#a8d5c4;font-size:1.125rem}
 .note{background:#0f2f26;border-left:3px solid #64f59e;padding:1rem;border-radius:.5rem;margin:1.5rem 0}
+.sidebar-meta{text-align:left;line-height:1.45}
+.sidebar-meta p{margin:0 0 .85rem}
 </style>""", unsafe_allow_html=True)
 
 def nursing_lead_score(age_group, education_level, location_type, financial_capacity, 
@@ -83,6 +85,20 @@ def generate_nursing_leads():
     })
 
 df = generate_nursing_leads()
+
+nav_options=["Score a Lead","Lead Intelligence","Model Evaluation","Methodology & Data","Nursing Program Scoring"]
+if "main_nav" not in st.session_state:
+    st.session_state.main_nav="Nursing Program Scoring"
+st.sidebar.markdown("## ◎ Lead Intelligence")
+selected_page=st.sidebar.radio("Navigate",nav_options,key="main_nav")
+st.sidebar.divider()
+st.sidebar.markdown("""<div class="sidebar-meta">
+<p><strong>Data Input:</strong><br>950 simulated data as example or upload your own data</p>
+<p><strong>Model:</strong><br>Logistic Regression</p>
+<p><strong>Training:</strong><br>Behavioral signals</p>
+</div>""",unsafe_allow_html=True)
+if selected_page!="Nursing Program Scoring":
+    st.switch_page("app.py")
 
 st.markdown("""<div class='hero'><div class='eyebrow'>NURSING EDUCATION RECRUITMENT</div><h1>Nursing Program Scoring</h1><p>Predict enrollment likelihood for nursing higher education applicants using demographic, financial, campaign, and historical data.</p></div>""", unsafe_allow_html=True)
 
