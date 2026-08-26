@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-st.set_page_config(page_title="Lead Conversion Prediction | Jacob Chen", page_icon="◎", layout="wide")
+st.set_page_config(page_title="Lead Conversion Prediction", page_icon="◎", layout="wide")
 
 st.markdown("""<style>
 .stApp{background:#07130f;color:#e7f5ee}.hero{padding:2.3rem 0 1.2rem;border-top:3px solid #64f59e}.eyebrow{color:#64f59e;font-weight:700;letter-spacing:.12em;font-size:.8rem}.hero h1{font-size:3rem;margin:.5rem 0}.hero p{color:#a8d5c4;font-size:1.125rem}.note{background:#0f2f26;border-left:3px solid #64f59e;padding:1rem;border-radius:.5rem;margin:1.5rem 0}
