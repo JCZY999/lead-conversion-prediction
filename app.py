@@ -34,7 +34,7 @@ st.sidebar.markdown("## ◎ Lead Intelligence")
 page=st.sidebar.radio("Navigate",["Score a Lead","Lead Intelligence","Model Evaluation","Methodology & Data","Nursing Program Scoring"])
 st.sidebar.divider()
 st.sidebar.markdown("""<div class="sidebar-meta">
-<p><strong>Data Input:</strong><br>950 example simulated data or upload your own data</p>
+<p><strong>Data Input:</strong><br>950 simulated data as example or upload your own data</p>
 <p><strong>Model:</strong><br>Logistic Regression</p>
 <p><strong>Training:</strong><br>Behavioral signals</p>
 </div>""",unsafe_allow_html=True)
