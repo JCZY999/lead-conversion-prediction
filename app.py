@@ -16,18 +16,20 @@ st.markdown("""<style>
 .sidebar-meta p{margin:0 0 .85rem}
 </style>""", unsafe_allow_html=True)
 
-def probability(source, pages, minutes, opens, form, prior):
-    source_score={"Google":.85,"Facebook":.55,"LinkedIn":.70,"YouTube":.50,"Email":.75,"SEO":.80,"Referral":.65,"Other":.35}[source]
-    z=-3.1+source_score+.16*pages+.30*minutes+.13*opens+.95*form+1.4*prior
+def probability(source, channel, pages, minutes, opens, form, prior):
+    source_score={"Paid Search":.85,"Paid Social":.55,"SEO / Organic":.75,"Email / CRM":.80,"Display":.35,"Referral":.65}[source]
+    channel_score={"Google":.85,"Facebook":.55,"LinkedIn":.70,"YouTube":.50,"Email":.75,"SEO":.80,"Referral":.65,"Other":.35}[channel]
+    z=-3.5+source_score+.55*channel_score+.16*pages+.30*minutes+.13*opens+.95*form+1.4*prior
     return 1/(1+np.exp(-z))
 
 @st.cache_data
 def leads():
     rng=np.random.default_rng(42); n=950
-    source=rng.choice(["Google","Facebook","LinkedIn","YouTube","Email","SEO","Referral","Other"],n,p=[.25,.18,.12,.10,.14,.13,.05,.03])
+    source=rng.choice(["Paid Search","Paid Social","SEO / Organic","Email / CRM","Display","Referral"],n,p=[.28,.22,.18,.12,.12,.08])
+    channel=rng.choice(["Google","Facebook","LinkedIn","YouTube","Email","SEO","Referral","Other"],n,p=[.25,.18,.12,.10,.14,.13,.05,.03])
     pages=rng.integers(1,13,n); mins=np.round(rng.gamma(2,1.25,n),1); opens=rng.poisson(2,n); form=rng.binomial(1,.42,n); prior=np.round(rng.uniform(0,.8,n),2)
-    p=np.array([probability(s,a,b,c,d,e) for s,a,b,c,d,e in zip(source,pages,mins,opens,form,prior)])
-    converted=rng.binomial(1,p); return pd.DataFrame({"Lead ID":[f"LD-{1000+i}" for i in range(n)],"Source":source,"Pages Viewed":pages,"Time on Site (min)":mins,"Email Opens":opens,"Form Started":form,"Prior Lead Probability":prior,"Predicted Probability":p,"Converted":converted,"Expected Pipeline USD":p*8500})
+    p=np.array([probability(s,ch,a,b,c,d,e) for s,ch,a,b,c,d,e in zip(source,channel,pages,mins,opens,form,prior)])
+    converted=rng.binomial(1,p); return pd.DataFrame({"Lead ID":[f"LD-{1000+i}" for i in range(n)],"Source":source,"Channel":channel,"Pages Viewed":pages,"Time on Site (min)":mins,"Email Opens":opens,"Form Started":form,"Prior Lead Probability":prior,"Predicted Probability":p,"Converted":converted,"Expected Pipeline USD":p*8500})
 
 df=leads()
 st.sidebar.markdown("## ◎ Lead Intelligence")
@@ -43,13 +45,16 @@ st.sidebar.markdown("""<div class="sidebar-meta">
 if page=="Score a Lead":
     st.markdown("""<div class='hero'><div class='eyebrow'>LEAD CONVERSION PREDICTION</div><h1>Score a Lead</h1><p>Simulate a lead's likelihood to convert and turn behavioral signals into an actionable sales recommendation.</p></div>""", unsafe_allow_html=True)
     a,b,c=st.columns(3)
-    with a: source=st.selectbox("Channel",["Google","Facebook","LinkedIn","YouTube","Email","SEO","Referral","Other"]); pages=st.slider("Pages viewed",1,15,5)
+    with a:
+        source=st.selectbox("Acquisition source",["Paid Search","Paid Social","SEO / Organic","Email / CRM","Display","Referral"])
+        channel=st.selectbox("Channel",["Google","Facebook","LinkedIn","YouTube","Email","SEO","Referral","Other"])
+        pages=st.slider("Pages viewed",1,15,5)
     with b: mins=st.slider("Time on site (minutes)",0.0,15.0,3.5,.5); opens=st.slider("Email opens",0,10,2)
     with c: form=st.toggle("Started an inquiry form",value=True); prior=st.slider("Prior lead probability",0.0,.8,.20,.05)
-    p=probability(source,pages,mins,opens,int(form),prior); tier="High priority" if p>=.65 else "Nurture" if p>=.35 else "Low priority"
+    p=probability(source,channel,pages,mins,opens,int(form),prior); tier="High priority" if p>=.65 else "Nurture" if p>=.35 else "Low priority"
     k1,k2,k3=st.columns(3);k1.metric("Predicted conversion",f"{p:.1%}");k2.metric("Lead priority",tier);k3.metric("Expected pipeline",f"${p*8500:,.0f}")
     st.progress(float(p)); st.markdown(f"<div class='note'><b>Recommendation:</b> {('Route to sales within one business hour.' if p>=.65 else 'Enroll in a personalized nurture sequence.' if p>=.35 else 'Continue engagement via low-touch email campaigns.')}</div>",unsafe_allow_html=True)
-    drivers=pd.DataFrame({"Feature":["Form started","Pages viewed","Source quality","Prior probability","Time on site","Email opens"],"Contribution":[.95,.16*pages,{"Google":.85,"Facebook":.55,"LinkedIn":.70,"YouTube":.50,"Email":.75,"SEO":.80,"Referral":.65,"Other":.35}[source],.95*prior,.30*mins,.13*opens]})
+    drivers=pd.DataFrame({"Feature":["Form started","Pages viewed","Acquisition source","Channel quality","Prior probability","Time on site","Email opens"],"Contribution":[.95,.16*pages,{"Paid Search":.85,"Paid Social":.55,"SEO / Organic":.75,"Email / CRM":.80,"Display":.35,"Referral":.65}[source],.55*{"Google":.85,"Facebook":.55,"LinkedIn":.70,"YouTube":.50,"Email":.75,"SEO":.80,"Referral":.65,"Other":.35}[channel],1.4*prior,.30*mins,.13*opens]})
     fig=px.bar(drivers.sort_values("Contribution"),x="Contribution",y="Feature",orientation="h",template="plotly_dark",color_discrete_sequence=["#64f59e"],title="Local feature drivers")
     fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f");st.plotly_chart(fig,use_container_width=True)
 elif page=="Lead Intelligence":
