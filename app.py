@@ -27,7 +27,7 @@ def leads():
     p=np.array([probability(s,a,b,c,d,e) for s,a,b,c,d,e in zip(source,pages,mins,opens,form,prior)])
     converted=rng.binomial(1,p); return pd.DataFrame({"Lead ID":[f"LD-{1000+i}" for i in range(n)],"Source":source,"Pages Viewed":pages,"Time on Site (min)":mins,"Email Opens":opens,"Form Started":form,"Prior Lead Probability":prior,"Predicted Probability":p,"Converted":converted,"Expected Pipeline USD":p*8500})
 
-df=leads(); st.sidebar.markdown("## ◎ Lead Intelligence"); page=st.sidebar.radio("Navigate",["Score a Lead","Lead Intelligence","Model Evaluation","Methodology & Data"]); st.sidebar.divider(); st.sidebar.markdown("**Data**: 950 simulated leads\n**Model**: Logistic Regression\n**Training**: Behavioral signals")
+df=leads(); st.sidebar.markdown("## ◎ Lead Intelligence"); page=st.sidebar.radio("Navigate",["Score a Lead","Lead Intelligence","Model Evaluation","Methodology & Data","Nursing Program Scoring"]); st.sidebar.divider(); st.sidebar.markdown("**Data**: 950 simulated leads\n**Model**: Logistic Regression\n**Training**: Behavioral signals")
 
 if page=="Score a Lead":
     st.markdown("""<div class='hero'><div class='eyebrow'>LEAD CONVERSION PREDICTION</div><h1>Score a Lead</h1><p>Simulate a lead's likelihood to convert and turn behavioral signals into an actionable sales recommendation.</p></div>""", unsafe_allow_html=True)
@@ -49,6 +49,8 @@ elif page=="Lead Intelligence":
     fig=px.scatter(chart,x="Leads",y="Avg_probability",size="Pipeline",color="Source",template="plotly_dark",title="Channel quality and expected pipeline")
     fig.update_layout(paper_bgcolor="#07130f",plot_bgcolor="#07130f");st.plotly_chart(fig,use_container_width=True)
     st.dataframe(view.sort_values("Predicted Probability",ascending=False).head(25).style.format({"Predicted Probability":"{:.1%}","Prior Lead Probability":"{:.0%}","Expected Pipeline USD":"${:,.0f}"}),use_container_width=True)
+elif page=="Nursing Program Scoring":
+    st.switch_page("pages/nursing_program_scoring.py")
 else:
     st.markdown("""<div class='hero'><div class='eyebrow'>MODEL TRANSPARENCY</div><h1>"""+("Model Evaluation" if page=="Model Evaluation" else "Methodology & Data")+"</h1><p>"+("Compare model quality across different training algorithms." if page=="Model Evaluation" else "Understand the data sources and methodology behind this prediction model.")+"</p></div>""", unsafe_allow_html=True)
     if page=="Model Evaluation":
