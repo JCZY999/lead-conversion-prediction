@@ -4,6 +4,12 @@ An interactive Streamlit application that turns marketing engagement signals int
 
 **Live demo:** [Lead Conversion Prediction](https://lead-conversion-prediction-h2srqjegsu4ar2gyqvtduu.streamlit.app/)
 
+## Program Enrollment Forecasting Case Study
+
+The fully executed [Program-Level Student Enrollment Forecasting Case Study](program-enrollment-forecasting-case-study.ipynb) extends this project from lead-level prioritization to four-week-ahead enrollment planning by academic program. It connects Google keyword search demand, paid and organic traffic, GA4-style website behavior, CRM leads and applications, admissions outcomes, and enrollment.
+
+The notebook includes a leakage-safe program-week ML workflow, staged funnel feature-set experiments, time-based validation, Ridge and tree-ensemble models, randomized tuning, MAE/RMSE/R²/WAPE/bias and interval coverage, program diagnostics, capacity-risk detection, planning-cost outcomes, interpretation, deployment design, monitoring, retraining, and incrementality testing.
+
 ## Business problem
 
 Marketing and admissions/sales teams often receive more inquiries than they can follow up with immediately. A simple first-come, first-served workflow can delay response to high-intent leads and waste sales capacity on low-propensity records.
